@@ -32,8 +32,16 @@ const requestListener = async (req, res) => {
       api_url = JSON.parse(data).api_url 
       res.setHeader("Content-Type", "application/json");
       data = await fetchPokemonApi(api_url);
+      if(JSON.stringify(data) == "{}") {
+        res.end("Nome do pokemon inválido.");
+        return;
+      }
       aiResponse = await fetchGeminiAi("Fale curiosidades sobre o seguinte pokemon a partir de algumas características suas: " + "name: " + data.name + " id: " 
         + data.id + " weight: " + data.weight + " Escreva em parágrafos, não use bullet points.");
+      if(aiResponse == "") {
+        res.end("Erro na obtenção da resposta da IA. Por favor tente novamente.")
+        return;
+      }
       res.writeHead(200);
       res.end(aiResponse); 
     })
@@ -53,7 +61,8 @@ const fetchPokemonApi = async url => {
         const data = await response.json();
         return data;
     } catch (error) {
-        return console.log(error);
+        console.log(error);
+        return {};
     }
 }
 
@@ -62,7 +71,8 @@ const fetchGeminiAi = async prompt => {
         const result = await model.generateContent(prompt);
         return result.response.text();
     } catch (error) {
-        return console.log(error);
+        console.log(error);
+        return "";
     }
 }
 
